@@ -1,4 +1,4 @@
-# Firewall AI Optimization — Cloud-Deployable Academic Application v1.0
+# Firewall AI Optimization — Cloud-Deployable Academic Application v1.1
 
 **Title:** Implementation of a Firewall Rule Optimization System Using AI Techniques
 
@@ -83,3 +83,31 @@ Testing is necessary for a credible academic project and is **not** a replacemen
 ## Evidence for graduation thesis
 
 Suggested screenshots: main dashboard, rule analysis, AI detection, optimized rules, before/after packet check, exported reports, GitHub repo, and cloud app URL. Report actual observed values, not hypothetical numbers.
+
+
+## Reproducible academic evaluation (v1.1)
+
+Select **📊 Evaluation** inside the Streamlit app and click **Run evaluation**.
+It reads `data/benchmark_60_rules.csv` and `data/benchmark_60_labels.csv`,
+compares known synthetic design classes, runs Isolation Forest screening and
+assesses four simulated dataset sizes (12, 60, 120, 300 rules).
+Two CSV files can be downloaded from this tab. The comparison uses simulated
+data, not actual enterprise firewall traffic.
+
+For the same measurements outside Streamlit:
+
+```bash
+python evaluation.py
+python -m unittest discover -s tests -v
+```
+
+**Interpretation:** Perfect matches to deliberately constructed duplicate /
+redundant / shadowed class labels should not be generalized to unseen real
+firewall configurations. The "independent rule" design label is only an
+exploratory outlier-screening proxy. It is NOT a malicious rule or security
+anomaly label, so ML proxy precision / recall are not cyberattack detection
+metrics. Timings report Python analysis + ML duration, not traffic throughput.
+
+**Attribution:** University thesis student name: Tabarak (full legal name to be
+added by the author). The GitHub account owner's username is not thesis
+authorship.

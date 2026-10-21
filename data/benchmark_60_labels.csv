@@ -1,0 +1,61 @@
+rule_id,synthetic_design_label
+T001,base rule
+T002,duplicate of group base
+T003,same-action redundant
+T004,shadowed opposite-action
+T005,base DNS rule
+T006,duplicate of DNS rule
+T007,shadowed opposite-action
+T008,base SSH deny rule
+T009,shadowed opposite-action
+T010,independent rule
+T011,independent rule
+T012,independent rule
+T013,base rule
+T014,duplicate of group base
+T015,same-action redundant
+T016,shadowed opposite-action
+T017,base DNS rule
+T018,duplicate of DNS rule
+T019,shadowed opposite-action
+T020,base SSH deny rule
+T021,shadowed opposite-action
+T022,independent rule
+T023,independent rule
+T024,independent rule
+T025,base rule
+T026,duplicate of group base
+T027,same-action redundant
+T028,shadowed opposite-action
+T029,base DNS rule
+T030,duplicate of DNS rule
+T031,shadowed opposite-action
+T032,base SSH deny rule
+T033,shadowed opposite-action
+T034,independent rule
+T035,independent rule
+T036,independent rule
+T037,base rule
+T038,duplicate of group base
+T039,same-action redundant
+T040,shadowed opposite-action
+T041,base DNS rule
+T042,duplicate of DNS rule
+T043,shadowed opposite-action
+T044,base SSH deny rule
+T045,shadowed opposite-action
+T046,independent rule
+T047,independent rule
+T048,independent rule
+T049,base rule
+T050,duplicate of group base
+T051,same-action redundant
+T052,shadowed opposite-action
+T053,base DNS rule
+T054,duplicate of DNS rule
+T055,shadowed opposite-action
+T056,base SSH deny rule
+T057,shadowed opposite-action
+T058,independent rule
+T059,independent rule
+T060,independent rule

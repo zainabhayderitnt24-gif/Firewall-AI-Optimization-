@@ -11,6 +11,7 @@ import streamlit as st
 
 from analysis import COLUMNS, analyze, filter_packet, optimize, parse_rules
 from ai_model import detect_anomalies
+from evaluation import load_benchmark, labeled_evaluation, run_scaling_benchmarks
 
 st.set_page_config(page_title="Firewall AI Optimizer", page_icon="🛡️", layout="wide")
 st.markdown("""
@@ -22,6 +23,7 @@ h1 {font-size: 2.35rem !important;}
 """, unsafe_allow_html=True)
 st.title("🛡️ Cloud Firewall AI Optimizer")
 st.caption("An explainable, AI-assisted analysis and optimization system for ordered IPv4 firewall rules")
+st.caption("Academic graduation project prepared for Tabarak (full student name to be supplied)")
 st.info("Academic software prototype • No hardware required • Does not access or modify a live firewall")
 
 with st.sidebar:
@@ -72,8 +74,8 @@ c2.metric("Removable rules", removal_n)
 c3.metric("Remaining rules", optimized_n)
 c4.metric("AI review flags", review_n)
 
-analysis_tab, optimize_tab, ai_tab, verify_tab, help_tab = st.tabs([
-    "🔎 Rule analysis", "✅ Optimization", "🧠 AI detection", "🔬 Packet verification", "📘 Methodology",
+analysis_tab, optimize_tab, ai_tab, verify_tab, evidence_tab, help_tab = st.tabs([
+    "🔎 Rule analysis", "✅ Optimization", "🧠 AI detection", "🔬 Packet verification", "📊 Evaluation", "📘 Methodology",
 ])
 
 with analysis_tab:
@@ -141,6 +143,44 @@ with verify_tab:
             st.error(f"Invalid packet parameters: {exc}")
     st.caption("Packet checks provide examples. The rule-containment condition is the mathematical basis for guaranteed removals within this model.")
 
+@st.cache_data(show_spinner=False)
+def cached_evaluation():
+    benchmark, ground_truth = load_benchmark()
+    detailed, m = labeled_evaluation(benchmark, ground_truth, contamination=0.15)
+    comparison = run_scaling_benchmarks(repetitions=3, packets=3000)
+    return detailed, m, comparison
+
+with evidence_tab:
+    st.subheader('5A · Reproducible experimental evaluation')
+    st.caption('This tab evaluates fixed, intentionally constructed synthetic datasets. It does not test a live firewall or cloud-network throughput.')
+    st.markdown('**Use Run evaluation once** to reproduce the design-label comparison, ML proxy screening, scaling and packet checks. No separate file upload is required.')
+    if st.button('▶ Run evaluation', key='run_eval'):
+        st.session_state['eval_display'] = True
+    if st.session_state.get('eval_display',False):
+        with st.spinner('Evaluating sample datasets...'):
+            detail, metric, scaled = cached_evaluation()
+        st.markdown('**A. Deterministic findings against synthetic design labels**')
+        a,b,c=st.columns(3)
+        a.metric('Exact class agreement',f"{metric['correct_exact_classes']} / {metric['total_rules']}")
+        b.metric('Synthetic-case precision',f"{metric['deterministic_precision']:.0%}")
+        c.metric('Synthetic-case recall',f"{metric['deterministic_recall']:.0%}")
+        st.caption('The designer placed known, simple anomalies in this benchmark. High agreement here does not imply comparable accuracy on unfamiliar real-world configurations.')
+        st.markdown('**B. Exploratory AI screening (independent-rule proxy, not security ground truth)**')
+        c1,c2,c3,c4=st.columns(4)
+        c1.metric('AI review flags',metric['ai_review_count'])
+        c2.metric('Independent labeled',metric['independent_rules'])
+        c3.metric('Proxy precision',f"{metric['ai_independent_proxy_precision']:.0%}")
+        c4.metric('Proxy recall',f"{metric['ai_independent_proxy_recall']:.0%}")
+        st.warning('Independent rules are not necessarily anomalous or unsafe. These proxy metrics CANNOT be reported as AI security-threat detection accuracy.')
+        st.markdown('**C. Scaling and sampled behavior checks**')
+        st.dataframe(scaled,hide_index=True,use_container_width=True)
+        st.caption('Times are medians of three full software runs on the current host; do not interpret them as firewall packet-processing times. Packet checks include targeted matches and are only sampled checks, not a formal exhaustive proof.')
+        st.bar_chart(scaled.set_index('original_rules')[['median_analysis_ai_ms']])
+        st.download_button('⬇ Download evaluation table (.csv)',scaled.to_csv(index=False).encode('utf-8'),
+                           file_name='experimental_evaluation_results.csv',mime='text/csv')
+        st.download_button('⬇ Download benchmark class comparisons (.csv)',detail.to_csv(index=False).encode('utf-8'),
+                           file_name='benchmark_ground_truth_comparison.csv',mime='text/csv')
+
 with help_tab:
     st.markdown("""
     **Project:** Implementation of a Firewall Rule Optimization System Using AI Techniques
@@ -181,4 +221,4 @@ lcol.download_button("⬇ Detailed analysis (.csv)", combined.to_csv(index=False
                      "firewall_analysis_report.csv", mime="text/csv")
 rcol.download_button("⬇ Research summary (.txt)", summary.encode("utf-8"),
                      "firewall_research_summary.txt", mime="text/plain")
-st.caption("Firewall AI Optimizer · Academic prototype v1.0 · Cloud deployable · Review every recommendation before using real policies")
+st.caption("Firewall AI Optimizer · Academic prototype v1.1 · Cloud deployable · Review every recommendation before using real policies")

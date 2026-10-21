@@ -1,0 +1,5 @@
+dataset,original_rules,removed_rules,optimized_rules,reduction_percent,median_analysis_ai_ms,packets_checked,matching_packet_decisions,allow_decisions,deny_decisions
+Built-in 12,12,2,10,16.67,86.79,3000,3000,2029,971
+Labeled 60,60,15,45,25.0,94.32,3000,3000,2229,771
+Generated 120,120,30,90,25.0,97.4,3000,3000,2291,709
+Generated 300,300,75,225,25.0,140.77,3000,3000,2231,769

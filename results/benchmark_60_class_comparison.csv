@@ -1,0 +1,61 @@
+rule_id,synthetic_design_label,priority,finding,related_earlier_rules,safe_to_remove,ai_flag,anomaly_score,expected_finding,class_match
+T001,base rule,1,OK,,False,Typical,0.064,OK,True
+T002,duplicate of group base,2,Duplicate,T001,True,Typical,0.0682,Duplicate,True
+T003,same-action redundant,3,Redundant / shadowed (same action),T001,True,Typical,0.0654,Redundant / shadowed (same action),True
+T004,shadowed opposite-action,4,Shadowed (opposite action),T001,False,Typical,0.0479,Shadowed (opposite action),True
+T005,base DNS rule,5,OK,,False,Typical,0.0454,OK,True
+T006,duplicate of DNS rule,6,Duplicate,T005,True,Typical,0.0476,Duplicate,True
+T007,shadowed opposite-action,7,Shadowed (opposite action),T005,False,Typical,0.0018,Shadowed (opposite action),True
+T008,base SSH deny rule,8,OK,,False,Typical,0.0475,OK,True
+T009,shadowed opposite-action,9,Shadowed (opposite action),T008,False,Typical,0.0504,Shadowed (opposite action),True
+T010,independent rule,10,OK,,False,Review,-0.0558,OK,True
+T011,independent rule,11,OK,,False,Review,-0.0162,OK,True
+T012,independent rule,12,OK,,False,Review,-0.0182,OK,True
+T013,base rule,13,OK,,False,Typical,0.1071,OK,True
+T014,duplicate of group base,14,Duplicate,T013,True,Typical,0.1071,Duplicate,True
+T015,same-action redundant,15,Redundant / shadowed (same action),T013,True,Typical,0.097,Redundant / shadowed (same action),True
+T016,shadowed opposite-action,16,Shadowed (opposite action),T013,False,Typical,0.0811,Shadowed (opposite action),True
+T017,base DNS rule,17,OK,,False,Typical,0.0875,OK,True
+T018,duplicate of DNS rule,18,Duplicate,T017,True,Typical,0.0855,Duplicate,True
+T019,shadowed opposite-action,19,Shadowed (opposite action),T017,False,Typical,0.0413,Shadowed (opposite action),True
+T020,base SSH deny rule,20,OK,,False,Typical,0.0808,OK,True
+T021,shadowed opposite-action,21,Shadowed (opposite action),T020,False,Typical,0.0863,Shadowed (opposite action),True
+T022,independent rule,22,OK,,False,Review,-0.0182,OK,True
+T023,independent rule,23,OK,,False,Typical,0.0174,OK,True
+T024,independent rule,24,OK,,False,Typical,0.0216,OK,True
+T025,base rule,25,OK,,False,Typical,0.1137,OK,True
+T026,duplicate of group base,26,Duplicate,T025,True,Typical,0.1142,Duplicate,True
+T027,same-action redundant,27,Redundant / shadowed (same action),T025,True,Typical,0.1073,Redundant / shadowed (same action),True
+T028,shadowed opposite-action,28,Shadowed (opposite action),T025,False,Typical,0.0939,Shadowed (opposite action),True
+T029,base DNS rule,29,OK,,False,Typical,0.0877,OK,True
+T030,duplicate of DNS rule,30,Duplicate,T029,True,Typical,0.0883,Duplicate,True
+T031,shadowed opposite-action,31,Shadowed (opposite action),T029,False,Typical,0.0442,Shadowed (opposite action),True
+T032,base SSH deny rule,32,OK,,False,Typical,0.086,OK,True
+T033,shadowed opposite-action,33,Shadowed (opposite action),T032,False,Typical,0.0887,Shadowed (opposite action),True
+T034,independent rule,34,OK,,False,Review,-0.0191,OK,True
+T035,independent rule,35,OK,,False,Typical,0.0302,OK,True
+T036,independent rule,36,OK,,False,Typical,0.0289,OK,True
+T037,base rule,37,OK,,False,Typical,0.1057,OK,True
+T038,duplicate of group base,38,Duplicate,T037,True,Typical,0.1023,Duplicate,True
+T039,same-action redundant,39,Redundant / shadowed (same action),T037,True,Typical,0.1023,Redundant / shadowed (same action),True
+T040,shadowed opposite-action,40,Shadowed (opposite action),T037,False,Typical,0.0883,Shadowed (opposite action),True
+T041,base DNS rule,41,OK,,False,Typical,0.0714,OK,True
+T042,duplicate of DNS rule,42,Duplicate,T041,True,Typical,0.0738,Duplicate,True
+T043,shadowed opposite-action,43,Shadowed (opposite action),T041,False,Typical,0.0381,Shadowed (opposite action),True
+T044,base SSH deny rule,44,OK,,False,Typical,0.0816,OK,True
+T045,shadowed opposite-action,45,Shadowed (opposite action),T044,False,Typical,0.0732,Shadowed (opposite action),True
+T046,independent rule,46,OK,,False,Review,-0.026,OK,True
+T047,independent rule,47,OK,,False,Typical,0.0278,OK,True
+T048,independent rule,48,OK,,False,Typical,0.0205,OK,True
+T049,base rule,49,OK,,False,Typical,0.0783,OK,True
+T050,duplicate of group base,50,Duplicate,T049,True,Typical,0.0747,Duplicate,True
+T051,same-action redundant,51,Redundant / shadowed (same action),T049,True,Typical,0.0789,Redundant / shadowed (same action),True
+T052,shadowed opposite-action,52,Shadowed (opposite action),T049,False,Typical,0.0639,Shadowed (opposite action),True
+T053,base DNS rule,53,OK,,False,Typical,0.0439,OK,True
+T054,duplicate of DNS rule,54,Duplicate,T053,True,Typical,0.0442,Duplicate,True
+T055,shadowed opposite-action,55,Shadowed (opposite action),T053,False,Typical,0.0033,Shadowed (opposite action),True
+T056,base SSH deny rule,56,OK,,False,Typical,0.0507,OK,True
+T057,shadowed opposite-action,57,Shadowed (opposite action),T056,False,Typical,0.0454,Shadowed (opposite action),True
+T058,independent rule,58,OK,,False,Review,-0.0714,OK,True
+T059,independent rule,59,OK,,False,Review,-0.0233,OK,True
+T060,independent rule,60,OK,,False,Review,-0.01,OK,True
