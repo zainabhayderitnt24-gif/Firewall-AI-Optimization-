@@ -1,0 +1,22 @@
+test_anomaly_label_reproducibility (test_advanced_evaluation.AdvancedTests.test_anomaly_label_reproducibility) ... ok
+test_comparison_holdout_predictions (test_advanced_evaluation.AdvancedTests.test_comparison_holdout_predictions) ... ok
+test_exact_scaling_sizes_and_reduction (test_advanced_evaluation.AdvancedTests.test_exact_scaling_sizes_and_reduction) ... ok
+test_old_and_vectorized_results (test_advanced_evaluation.AdvancedTests.test_old_and_vectorized_results) ... ok
+test_optimization_numeric_order_and_trimmed_ids (test_advanced_evaluation.AdvancedTests.test_optimization_numeric_order_and_trimmed_ids) ... ok
+test_reference_random_mixed_ranges (test_advanced_evaluation.AdvancedTests.test_reference_random_mixed_ranges) ... ok
+test_scaling_measured_output (test_advanced_evaluation.AdvancedTests.test_scaling_measured_output) ... ok
+test_60_labeled_design_matches (test_evaluation.EvaluationTests.test_60_labeled_design_matches) ... ok
+test_sampled_packet_equivalence_60_and_120 (test_evaluation.EvaluationTests.test_sampled_packet_equivalence_60_and_120) ... ok
+test_synthetic_scaling_rule_sets (test_evaluation.EvaluationTests.test_synthetic_scaling_rule_sets) ... ok
+test_ai_model_produces_scores (test_rules.FirewallRuleTests.test_ai_model_produces_scores) ... ok
+test_bad_port_not_accepted (test_rules.FirewallRuleTests.test_bad_port_not_accepted) ... ok
+test_detection_cases (test_rules.FirewallRuleTests.test_detection_cases) ... ok
+test_invalid_ipv6_not_accepted (test_rules.FirewallRuleTests.test_invalid_ipv6_not_accepted) ... ok
+test_ip_containment (test_rules.FirewallRuleTests.test_ip_containment) ... ok
+test_overlap_and_detection_with_changed_action (test_rules.FirewallRuleTests.test_overlap_and_detection_with_changed_action) ... ok
+test_removal_preserves_policy_on_2000_diverse_packets (test_rules.FirewallRuleTests.test_removal_preserves_policy_on_2000_diverse_packets) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 2.873s
+
+OK

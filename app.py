@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from io import StringIO
+from io import BytesIO
 from ipaddress import IPv4Address
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from advanced_evaluation import (scalability, algorithm_comparison, scalability_figure,
+                                 comparison_figure, runtime_info, scaling_rules)
 
 from analysis import COLUMNS, analyze, filter_packet, optimize, parse_rules
 from ai_model import detect_anomalies
@@ -23,7 +28,7 @@ h1 {font-size: 2.35rem !important;}
 """, unsafe_allow_html=True)
 st.title("🛡️ Cloud Firewall AI Optimizer")
 st.caption("An explainable, AI-assisted analysis and optimization system for ordered IPv4 firewall rules")
-st.caption("Academic graduation project prepared for Tabarak (full student name to be supplied)")
+st.caption("Academic graduation project · Tabarak · v1.2")
 st.info("Academic software prototype • No hardware required • Does not access or modify a live firewall")
 
 with st.sidebar:
@@ -35,7 +40,7 @@ with st.sidebar:
     st.divider()
     st.subheader("Supported policy model")
     st.markdown("First match · Stateless · IPv4 · TCP/UDP · Allow/Deny · Default deny")
-    st.caption("Priority: smaller number is evaluated first. Overlaps are findings, not automatic security violations.")
+    st.caption("Up to 5,000 rules per file. Priority: smaller number is evaluated first. Overlaps are findings, not automatic security violations.")
     st.divider()
     st.subheader("Input schema")
     st.code(", ".join(COLUMNS), language="text")
@@ -48,8 +53,8 @@ source_label = "Uploaded CSV" if uploaded_file else "Built-in demonstration data
 try:
     sample_path = Path(__file__).resolve().parent / "data" / "sample_rules.csv"
     frame = pd.read_csv(uploaded_file if uploaded_file is not None else sample_path, dtype=str, keep_default_na=False)
-    if len(frame) > 1500:
-        raise ValueError("This cloud demo supports at most 1,500 rules per file. Please split the input.")
+    if len(frame) > 5000:
+        raise ValueError("This cloud demo supports at most 5,000 rules per file. Please split the input.")
     rules = parse_rules(frame)
     frame = frame.copy()
     frame["priority"] = frame["priority"].astype(int)
@@ -153,7 +158,7 @@ def cached_evaluation():
 with evidence_tab:
     st.subheader('5A · Reproducible experimental evaluation')
     st.caption('This tab evaluates fixed, intentionally constructed synthetic datasets. It does not test a live firewall or cloud-network throughput.')
-    st.markdown('**Use Run evaluation once** to reproduce the design-label comparison, ML proxy screening, scaling and packet checks. No separate file upload is required.')
+    st.markdown('**Use Run evaluation once for the original v1.1 benchmark** to reproduce the design-label comparison, ML proxy screening, scaling and packet checks. No separate file upload is required.')
     if st.button('▶ Run evaluation', key='run_eval'):
         st.session_state['eval_display'] = True
     if st.session_state.get('eval_display',False):
@@ -181,6 +186,65 @@ with evidence_tab:
         st.download_button('⬇ Download benchmark class comparisons (.csv)',detail.to_csv(index=False).encode('utf-8'),
                            file_name='benchmark_ground_truth_comparison.csv',mime='text/csv')
 
+# New evaluation experiments are explicit actions and are independent of uploaded CSV.
+def png_bytes(fig):
+    buffer = BytesIO()
+    fig.savefig(buffer, format="png", dpi=170, bbox_inches="tight")
+    return buffer.getvalue()
+
+with evidence_tab:
+    st.divider()
+    st.header("D. AI algorithm comparison — v1.2")
+    st.caption("Isolation Forest vs Local Outlier Factor (LOF) vs One-Class SVM")
+    st.markdown("""**Experimental design:** Three fixed seeds. Each trial uses 600 normal training rules,
+    300 independent normal calibration rules and 1,000 held-out test rules (900 normal + 100 injected statistical anomalies).
+    All methods use the same features (excluding arbitrary priority), training-only standardization and a 95th-percentile
+    calibration threshold (nominal 5% false-positive rate). Test labels are used only for evaluation.
+    Unlike the main dashboard's within-file Isolation Forest, this benchmark tests novelty detection on unseen data.
+    The labels describe synthetic statistical departures, not confirmed vulnerabilities or attacks.""")
+    if st.button("Run AI algorithm comparison", key="run_ml_v12", type="primary"):
+        with st.spinner("Training and comparing the three algorithms..."):
+            st.session_state["ml_v12"] = algorithm_comparison()
+    if "ml_v12" in st.session_state:
+        comp, trials, predictions = st.session_state["ml_v12"]
+        display = comp[["algorithm", "mean_accuracy", "mean_precision", "mean_recall", "mean_f1", "mean_roc_auc", "mean_false_positive_rate", "median_total_model_ms"]].copy()
+        display.columns = ["Algorithm", "Accuracy", "Precision", "Recall", "F1-score", "ROC-AUC", "False-positive rate", "Median model time (ms)"]
+        st.dataframe(display.round(4), hide_index=True, use_container_width=True)
+        best = comp.loc[comp.mean_f1.idxmax()]
+        st.metric("Highest mean F1 on this synthetic benchmark", best.algorithm, f"F1 = {best.mean_f1:.3f}", delta_color="off")
+        fig = comparison_figure(comp); st.pyplot(fig); chart = png_bytes(fig); plt.close(fig)
+        st.caption("Scores are arithmetic means across three trials. Model times are medians of fit + calibration scoring/threshold + test scoring, excluding shared preparation. No ranking is assumed in advance.")
+        with st.expander("Per-trial measurements and confusion matrix counts"):
+            st.dataframe(trials.round(4), hide_index=True, use_container_width=True)
+        st.download_button("Download AI comparison (.csv)", comp.to_csv(index=False).encode(), "ai_algorithm_comparison.csv", "text/csv", key="ml_summary_v12")
+        st.download_button("Download AI trial measurements (.csv)", trials.to_csv(index=False).encode(), "ai_algorithm_trials.csv", "text/csv", key="ml_trials_v12")
+        st.download_button("Download labeled predictions (.csv)", predictions.to_csv(index=False).encode(), "ai_algorithm_predictions.csv", "text/csv", key="ml_preds_v12")
+        st.download_button("Download AI comparison chart (.png)", chart, "ai_algorithm_comparison.png", "image/png", key="ml_chart_v12")
+    st.divider()
+    st.header("E. Scalability — 100 to 5,000 rules")
+    st.markdown("""The benchmark measures actual execution time at **100, 500, 1,000, 2,000 and 5,000 rules**.
+    Three repetitions per size; median wall-clock duration includes parsing, deterministic analysis, Isolation Forest,
+    optimization and validation of the output. Dataset generation, plots, CSV export and packet checks are excluded from timing.
+    Each size also receives 300 targeted sampled packet checks. The Matplotlib plot uses measured values, not estimates.""")
+    if st.button("Run scalability benchmark (100–5000)", key="run_scale_v12", type="primary"):
+        with st.spinner("Measuring the five rule-set sizes..."):
+            st.session_state["scaling_v12"] = scalability()
+    if "scaling_v12" in st.session_state:
+        scale, timings = st.session_state["scaling_v12"]
+        cols = ["rules", "removed_rules", "optimized_rules", "median_rule_analysis_ms", "median_isolation_forest_ms", "median_total_ms", "packets_checked", "matching_decisions"]
+        st.dataframe(scale[cols].round(2), hide_index=True, use_container_width=True)
+        fig = scalability_figure(scale); st.pyplot(fig); chart = png_bytes(fig); plt.close(fig)
+        st.caption("Timing is measured on the host that runs this evaluation. The vectorized rule analyzer still has quadratic worst-case comparison complexity. Synthetic structured rules and sampled checks do not establish real firewall throughput or performance on all configurations.")
+        with st.expander("Raw timings for all 15 runs"):
+            st.dataframe(timings.round(3), hide_index=True, use_container_width=True)
+        st.download_button("Download scalability results (.csv)", scale.to_csv(index=False).encode(), "scalability_100_to_5000.csv", "text/csv", key="scale_summary_v12")
+        st.download_button("Download raw scalability timings (.csv)", timings.to_csv(index=False).encode(), "scalability_raw_timings.csv", "text/csv", key="scale_raw_v12")
+        st.download_button("Download Matplotlib curve (.png)", chart, "scalability_curve.png", "image/png", key="scale_chart_v12")
+    st.caption("Execution environment: " + runtime_info())
+    with st.expander("Optional: download a generated input to test the main dashboard"):
+        size = st.selectbox("Number of generated rules", [100, 500, 1000, 2000, 5000], key="generated_size_v12")
+        st.download_button("Download generated input (.csv)", scaling_rules(size).to_csv(index=False).encode(), f"firewall_{size}_rules.csv", "text/csv", key="generated_input_v12")
+
 with help_tab:
     st.markdown("""
     **Project:** Implementation of a Firewall Rule Optimization System Using AI Techniques
@@ -195,6 +259,8 @@ with help_tab:
     - AI anomaly scoring with Isolation Forest
     - Downloadable configuration and report
     - Interactive before/after packet decision comparison
+    - Held-out comparison of Isolation Forest, LOF and One-Class SVM
+    - Measured scalability at 100, 500, 1000, 2000 and 5000 rules, with Matplotlib plots
 
     **Research limitations:** This system simulates a stateless IPv4 TCP/UDP first-match firewall with a default-deny policy. It does **not** model stateful connections, real cloud provider security-group semantics, NAT, IPv6, traffic logs, actual latency, or physical performance. ML anomaly scores do not determine whether a rule is malicious.
 
@@ -221,4 +287,4 @@ lcol.download_button("⬇ Detailed analysis (.csv)", combined.to_csv(index=False
                      "firewall_analysis_report.csv", mime="text/csv")
 rcol.download_button("⬇ Research summary (.txt)", summary.encode("utf-8"),
                      "firewall_research_summary.txt", mime="text/plain")
-st.caption("Firewall AI Optimizer · Academic prototype v1.1 · Cloud deployable · Review every recommendation before using real policies")
+st.caption("Firewall AI Optimizer · Academic prototype v1.2 · Cloud deployable · Review every recommendation before using real policies")

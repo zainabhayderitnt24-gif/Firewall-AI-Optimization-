@@ -10,6 +10,20 @@ def detect_anomalies(rules: list, contamination: float = 0.15) -> pd.DataFrame:
             "ai_flag": ["Not evaluated (need 8+ rules)"] * len(rules),
             "anomaly_score": [float("nan")] * len(rules),
         })
+    features = rule_features(rules)
+    model = IsolationForest(n_estimators=100, contamination=contamination, random_state=42)
+    model.fit(features)
+    scores = model.decision_function(features)
+    flags = model.predict(features)
+    return pd.DataFrame({
+        "rule_id": [r.rule_id for r in rules],
+        "ai_flag": ["Review" if f == -1 else "Typical" for f in flags],
+        "anomaly_score": [round(float(v), 4) for v in scores],
+    })
+
+
+def rule_features(rules):
+    """Shared feature encoding for the original and comparison models."""
     data = []
     for r in rules:
         data.append({
@@ -27,13 +41,4 @@ def detect_anomalies(rules: list, contamination: float = 0.15) -> pd.DataFrame:
             "action_allow": int(r.action == "allow"),
             "priority": r.priority,
         })
-    features = pd.DataFrame(data)
-    model = IsolationForest(n_estimators=100, contamination=contamination, random_state=42)
-    model.fit(features)
-    scores = model.decision_function(features)
-    flags = model.predict(features)
-    return pd.DataFrame({
-        "rule_id": [r.rule_id for r in rules],
-        "ai_flag": ["Review" if f == -1 else "Typical" for f in flags],
-        "anomaly_score": [round(float(v), 4) for v in scores],
-    })
+    return pd.DataFrame(data)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from ipaddress import IPv4Network, ip_network, ip_address
 import pandas as pd
+import numpy as np
 
 COLUMNS = ["rule_id", "priority", "src_ip", "dst_ip", "src_port", "dst_port", "protocol", "action"]
 
@@ -104,7 +105,8 @@ def exact_duplicate(a: Rule, b: Rule) -> bool:
     )
 
 
-def analyze(rules: list[Rule]) -> pd.DataFrame:
+def analyze_reference(rules: list[Rule]) -> pd.DataFrame:
+    """Original v1.1 implementation retained as a regression oracle."""
     findings = []
     for idx, rule in enumerate(rules):
         status = "OK"
@@ -135,11 +137,47 @@ def analyze(rules: list[Rule]) -> pd.DataFrame:
     return pd.DataFrame(findings)
 
 
+def analyze(rules: list[Rule]) -> pd.DataFrame:
+    """Equivalent first-cover analysis with vectorized integer intervals.
+
+    O(n²) worst-case comparisons, O(n) temporary space.
+    """
+    rows = []
+    proto = {"tcp": 1, "udp": 2, "any": 3}
+    a = np.asarray([
+        (int(r.src_ip.network_address), int(r.src_ip.broadcast_address),
+         int(r.dst_ip.network_address), int(r.dst_ip.broadcast_address),
+         *r.src_port, *r.dst_port, proto[r.protocol], int(r.action == "allow"))
+        for r in rules
+    ], dtype=np.int64).reshape(-1, 10)
+    for i, r in enumerate(rules):
+        b = a[i]; p = a[:i]; status, evidence, safe = "OK", "", False
+        compatible = (p[:,8] & b[8]) == b[8]
+        cover = compatible & (p[:,0] <= b[0]) & (p[:,1] >= b[1]) & (p[:,2] <= b[2]) & (p[:,3] >= b[3]) & (p[:,4] <= b[4]) & (p[:,5] >= b[5]) & (p[:,6] <= b[6]) & (p[:,7] >= b[7])
+        ids = np.flatnonzero(cover)
+        if ids.size:
+            j = int(ids[0]); evidence = rules[j].rule_id
+            if a[j,9] != b[9]:
+                status = "Shadowed (opposite action)"
+            else:
+                safe = True
+                status = "Duplicate" if np.array_equal(a[j], b) else "Redundant / shadowed (same action)"
+        else:
+            overlap = (p[:,9] != b[9]) & ((p[:,8] & b[8]) != 0) & (p[:,0] <= b[1]) & (p[:,1] >= b[0]) & (p[:,2] <= b[3]) & (p[:,3] >= b[2]) & (p[:,4] <= b[5]) & (p[:,5] >= b[4]) & (p[:,6] <= b[7]) & (p[:,7] >= b[6])
+            ids = np.flatnonzero(overlap)[:5]
+            if ids.size:
+                status = "Overlapping opposite-action rules (review)"
+                evidence = ", ".join(rules[int(j)].rule_id for j in ids)
+        rows.append(dict(rule_id=r.rule_id, priority=r.priority, finding=status,
+                         related_earlier_rules=evidence, safe_to_remove=safe))
+    return pd.DataFrame(rows, columns=["rule_id", "priority", "finding", "related_earlier_rules", "safe_to_remove"])
+
+
 def optimize(frame: pd.DataFrame, report: pd.DataFrame) -> pd.DataFrame:
     """Only remove rules provably unreachable due to ONE earlier same-action covering rule."""
     removed = set(report.loc[report.safe_to_remove, "rule_id"])
-    output = frame.loc[~frame["rule_id"].astype(str).isin(removed)].copy()
-    return output.sort_values("priority").reset_index(drop=True)
+    output = frame.loc[~frame["rule_id"].astype(str).str.strip().isin(removed)].copy()
+    return output.sort_values("priority", key=lambda v: v.astype(int)).reset_index(drop=True)
 
 
 def match_packet(rule: Rule, src_ip: str, dst_ip: str, src_port: int, dst_port: int, protocol: str) -> bool:
@@ -153,7 +191,11 @@ def match_packet(rule: Rule, src_ip: str, dst_ip: str, src_port: int, dst_port: 
 
 
 def filter_packet(rules: list[Rule], src_ip: str, dst_ip: str, src_port: int, dst_port: int, protocol: str, default_action="deny") -> str:
+    source, dest = ip_address(src_ip), ip_address(dst_ip)
+    protocol = protocol.lower()
     for rule in rules:
-        if match_packet(rule, src_ip, dst_ip, src_port, dst_port, protocol):
+        if (rule.protocol in ("any", protocol) and rule.src_port[0] <= src_port <= rule.src_port[1]
+                and rule.dst_port[0] <= dst_port <= rule.dst_port[1]
+                and source in rule.src_ip and dest in rule.dst_ip):
             return rule.action
     return default_action

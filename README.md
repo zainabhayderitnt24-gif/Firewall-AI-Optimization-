@@ -1,4 +1,17 @@
-# Firewall AI Optimization — Cloud-Deployable Academic Application v1.1
+# Firewall AI Optimization — Cloud-Deployable Academic Application v1.2
+
+## v1.2 — supervisor-requested extensions
+
+The original dashboard, deterministic analysis, Isolation Forest screening, safe removal, packet verification and v1.1 experiments are preserved. The upload limit is now 5,000 rules. In **Evaluation**, use the new buttons **Run AI algorithm comparison** and **Run scalability benchmark (100–5000)**. Each runs a fresh experiment on the host; the original `Run evaluation` button remains for the earlier benchmark.
+
+- AI comparison: Isolation Forest, novelty-mode Local Outlier Factor (20 neighbors), and RBF One-Class SVM (`nu=0.05`). Three independent seeded trials, each with 600 normal training rules, 300 normal calibration rules, and a held-out set of 900 normal and 100 deliberately injected statistical anomalies. Training-only StandardScaler, shared features excluding arbitrary priority, and separate normal calibration at the 95th percentile of anomaly scores. Metrics use test labels only after predictions. Report means across trials and median model fit + calibration + scoring times. These experiments compare novelty detection, distinct from the main dashboard's within-file unsupervised screening. No claim that independent or unusual rules are malicious.
+- Scalability: 100, 500, 1,000, 2,000, and 5,000 rules, three repetitions per size. Measure actual parsing + deterministic analysis + Isolation Forest + optimization and output validation, excluding input generation, packet checks, drawing and exporting. Report median total and stage times, and 300 targeted sampled packet checks at each size. The analyzer uses NumPy interval comparisons, retaining the original first-cover semantics; worst-case complexity remains O(n²) comparisons, with O(n) temporary memory.
+- Matplotlib figures render directly in Evaluation (`st.pyplot`), and can be downloaded with the tables and raw trial evidence.
+- `python advanced_evaluation.py` reproduces the local results and charts under `results/v1.2_local/`. Those are development-environment measurements, not Streamlit cloud results. Cloud timings and library-version-dependent metrics may differ. No actual network/firewall throughput is measured.
+- `python -m unittest discover -s tests -v` runs 17 tests, including comparison against the retained v1.1 reference analyzer on mixed rules and regression checks of the old features.
+
+**Updating an existing deployment:** upload the contents of this package to the existing repository root, keeping `app.py` and `requirements.txt` at root. Commit to the existing branch. In Streamlit, confirm the updated version and both new Evaluation buttons. No new account or hardware is required. Do not delete the working backup before confirming deployment.
+
 
 **Title:** Implementation of a Firewall Rule Optimization System Using AI Techniques
 
